@@ -71,21 +71,34 @@ jobs:
     container:
       image: node:18-alpine
       options: --cap-add=NET_ADMIN
-    strategy:
-      matrix:
-        node-version: [18.x]
+
     steps:
-    - env: 
+    - name: Set up Maven (inside Node.js container)
+      run: |
+        apk update
+        apk add --no-cache maven
+        mvn -v  # Verify Maven installation
+
+    - name: Set SCAN_ID environment variable
+      env: 
         SCAN_ID: ${{ needs.create_scan_in_IR_Portal.outputs.scan_id }}
       run: echo $SCAN_ID
-    - uses: invisirisk/pse-action@v1.0.8
+
+    - name: Run PSE action for Node.js/Maven container
+      uses: invisirisk/pse-action@v1.0.8
       with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          SCAN_ID: ${{ needs.create_scan_in_IR_Portal.outputs.scan_id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        SCAN_ID: ${{ needs.create_scan_in_IR_Portal.outputs.scan_id }}
+
     - name: Checkout the code
       uses: actions/checkout@v3
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+
     - run: npm install
+
+    - name: Run Maven build
+      run: mvn clean install -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true
