@@ -1,9 +1,9 @@
 name: Build NPM Package
 on:
   push:
-    branches: [ DEV ]
+    branches: [ master ]
   pull_request:
-    branches: [ DEV ]
+    branches: [ master ]
  
 permissions:
   checks: write
